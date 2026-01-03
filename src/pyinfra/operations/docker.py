@@ -27,6 +27,7 @@ def container(
     networks: list[str] | None = None,
     volumes: list[str] | None = None,
     env_vars: list[str] | None = None,
+    labels: list[str] | None = None,
     pull_always: bool = False,
     present: bool = True,
     force: bool = False,
@@ -41,6 +42,7 @@ def container(
     + ports: port list to expose
     + volumes: volume list to map on container
     + env_vars: environment variable list to inject on container
+    + labels: Label list to attach to the container
     + pull_always: force image pull
     + force: remove a container with same name and create a new one
     + present: whether the container should be up and running
@@ -85,6 +87,7 @@ def container(
         networks or list(),
         volumes or list(),
         env_vars or list(),
+        labels or list(),
         pull_always,
     )
     existent_container = host.get_fact(DockerContainer, object_id=container)
