@@ -1,3 +1,44 @@
+# v3.6
+
+First 2026 release - Happy New Year all! Thank you to all contributors. One big highlight is new metadata spec for plugins, this is the start of better discovery and documentation generation for third party facts and operations:
+
+- add metadata spec for pyinfra plugins (@rod7760)
+
+New and updated operations/facts:
+
+- operations: add `_temp_dir` global argument for configuring temp directory (@wowi42)
+- operations: add `files.copy` operation (@EricDriussi)
+- operations.crontab: fix modification not properly relying on the `cron_name` parameter (@information-redacted)
+- operations.docker.container: add support for setting labels (@spookyvision)
+- operations: add import statements on at least one example of every operation (@mkinney)
+- operations.docker.image: make operation idempotent (@DonDebonair)
+- operations.files.template: allow custom jinja2 template loaders (@DaRasch)
+- operations.files.block/connectors.util: use correct temporary directory (@morrison12)
+- operations.util.packaging: allow empty package list in `ensure_packages` (@schenker)
+- operations: fix tmpdir to properly use all the POSIX environment variables (@wowi42)
+- facts.files.FileContents: improve docstring (@adonm)
+- facts.apt.update: fix computation of cache_time when host is not UTC (@philippemilink)
+- facts: add `FactProcessError` to log, not explode, issues processing facts (@NichtJens)
+- facts.npm: check directory exists before cd-ing (wowi42)
+
+Connectors:
+
+- connectors.docker: add platform and architecture option via connector data (@JP-Ellis)
+- connectors: close stdin after writing any input
+- connectors.ssh: add workaround for paramiko no session error (@dfaerch)
+
+CLI:  
+
+- cli: change color of "No changes" to cyan
+- cli: add option `--same-sudo-password` (@philippemilink)
+
+Docs/meta:
+
+- docs: replace `python -m` with `uv run -m` (@JP-Ellis)
+- docs: fix URLs in API documentation (@kelno)
+- docs/connectors: document command wrapping and parameter filtering best practices (@elazar)
+- tests: freeze date for fact tests
+
 # v3.5.3
 
 - another release to fix different doc generation issues 🫠
@@ -48,6 +89,7 @@ New release with some really awesome new features, brought to you by the fantast
 - enable using SCP instead of SFTP for SSH file transfers (@DonDebonair)
 
 New and updated operations/facts:
+
 - facts/server: add `RebootRequired` fact (@wowi42)
 - operations/pip: support PEP-508 package versions (@morrison12)
 - operations+facts/docker: add Docker plugin support (@DonDebonair)
