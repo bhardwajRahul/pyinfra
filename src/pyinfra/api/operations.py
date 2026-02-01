@@ -4,7 +4,7 @@ import time
 import traceback
 from itertools import product
 from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 import click
 import gevent
@@ -17,7 +17,7 @@ from pyinfra.progress import progress_spinner
 
 from .arguments import CONNECTOR_ARGUMENT_KEYS, ConnectorArguments
 from .command import FunctionCommand, PyinfraCommand, StringCommand
-from .exceptions import PyinfraError
+from .exceptions import NestedOperationError, PyinfraError
 from .util import (
     format_exception,
     log_error_or_warning,
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 #
 
 
-def run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
+def run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
     state.trigger_callbacks("operation_host_start", host, op_hash)
 
     if op_hash not in state.ops[host]:
@@ -59,7 +59,7 @@ def run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
             host.executing_op_hash = None
 
 
-def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
+def _run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
     op_data = state.get_op_data_for_host(host, op_hash)
     global_arguments = op_data.global_arguments
 
@@ -104,6 +104,8 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> Optional[bool]:
             if isinstance(command, FunctionCommand):
                 try:
                     status = command.execute(state, host, connector_arguments)
+                except NestedOperationError:
+                    host.log_styled("Error in nested operation", fg="red", log_func=logger.error)
                 except Exception as e:
                     # Custom functions could do anything, so expect anything!
                     logger.warning(traceback.format_exc())
