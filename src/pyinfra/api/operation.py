@@ -221,7 +221,7 @@ def add_op(state: State, op_func, *args, **kwargs):
             ),
         )
 
-    hosts = kwargs.pop("host", state.inventory.iter_active_hosts())
+    hosts = kwargs.pop("host", state.inventory.get_active_hosts())
     if isinstance(hosts, Host):
         hosts = [hosts]
 

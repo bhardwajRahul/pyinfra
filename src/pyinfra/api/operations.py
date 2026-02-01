@@ -278,7 +278,7 @@ def _run_serial_ops(state: "State"):
     Run all ops for all servers, one server at a time.
     """
 
-    for host in list(state.inventory.iter_active_hosts()):
+    for host in list(state.inventory.get_active_hosts()):
         host_operations = product([host], state.get_op_order())
         with progress_spinner(host_operations) as progress:
             try:
@@ -296,7 +296,7 @@ def _run_no_wait_ops(state: "State"):
     Run all ops for all servers at once.
     """
 
-    hosts_operations = product(state.inventory.iter_active_hosts(), state.get_op_order())
+    hosts_operations = product(state.inventory.get_active_hosts(), state.get_op_order())
     with progress_spinner(hosts_operations) as progress:
         # Spawn greenlet for each host to run *all* ops
         if state.pool is None:
@@ -308,7 +308,7 @@ def _run_no_wait_ops(state: "State"):
                 host,
                 progress=progress,
             )
-            for host in state.inventory.iter_active_hosts()
+            for host in state.inventory.get_active_hosts()
         ]
         gevent.joinall(greenlets)
 
@@ -326,9 +326,9 @@ def _run_single_op(state: "State", op_hash: str):
     failed_hosts = set()
 
     if op_meta.global_arguments["_serial"]:
-        with progress_spinner(state.inventory.iter_active_hosts()) as progress:
+        with progress_spinner(state.inventory.get_active_hosts()) as progress:
             # For each host, run the op
-            for host in state.inventory.iter_active_hosts():
+            for host in state.inventory.get_active_hosts():
                 result = _run_host_op_with_context(state, host, op_hash)
                 progress(host)
 
@@ -337,12 +337,12 @@ def _run_single_op(state: "State", op_hash: str):
 
     else:
         # Start with the whole inventory in one batch
-        batches = [list(state.inventory.iter_active_hosts())]
+        batches = [list(state.inventory.get_active_hosts())]
 
         # If parallel set break up the inventory into a series of batches
         parallel = op_meta.global_arguments["_parallel"]
         if parallel:
-            hosts = list(state.inventory.iter_active_hosts())
+            hosts = list(state.inventory.get_active_hosts())
             batches = [hosts[i : i + parallel] for i in range(0, len(hosts), parallel)]
 
         for batch in batches:
