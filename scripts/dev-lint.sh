@@ -2,9 +2,6 @@
 
 set -euo pipefail
 
-echo "Execute ruff format..."
-uv run ruff format
-
 echo "Execute ruff check..."
 uv run ruff check
 
