@@ -249,6 +249,7 @@ class FunctionCommand(PyinfraCommand):
                         self.function(*self.args, **self.kwargs)
                     except Exception as e:
                         return e
+            return None
 
         greenlet = gevent.spawn(execute_function)
         exception = greenlet.get()
