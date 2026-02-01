@@ -266,7 +266,10 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
         state = context.state
         host = context.host
 
-        if state.current_stage < StateStage.Prepare or state.current_stage > StateStage.Execute:
+        if pyinfra.is_cli and (
+            state.current_stage < StateStage.Prepare
+            or state.current_stage > StateStage.Execute
+        ):
             raise Exception("Cannot call operations outside of Prepare/Execute stages")
 
         if host.in_op:
