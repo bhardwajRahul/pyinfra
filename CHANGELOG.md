@@ -1,3 +1,39 @@
+# v3.6.1
+
+Thank you to all contributors. A solid bugfix release including some rather old bugs at this point.
+
+Core fixes:
+
+- api: handle/propagate nested operation errors
+- api: don't apply stage check in API mode
+- api: change `iter_active_hosts` -> `get_active_hosts`
+
+Operation/fact fixes:
+
+- operations.docker.container: add support for `--restart` and `--rm` arguments (@levinion)
+- operations.postgres: add idempotency notice on passwords to `postgres.role`
+- facts.flatpak.FlatpakPackages: handle headless output correctly
+- facts.crontab: don't return non-command cron entries in `get_command`
+- facts.files.FileContents: fix return None when no file exists
+- facts.files.FindFiles: fix args parameter being ignored (@wowi42)
+
+Connector fixes:
+
+- connectors.ssh: handle multiple known hosts files in SSH config
+
+CLI fixes:
+
+- cli: fix missing config lock
+- cli: fix config flags lost on multiple deploy files (@wowi42)
+- cli/inventory: support loading host groups directly from module attributes (@wowi42)
+
+Docs/meta:
+
+- docs: fix many minor errors (@romain-dartigues)
+- docs: fix typo in inventory-data.rst (@EshemMimi)
+- meta: add arguments linter
+- meta: fix dev linting scripts
+
 # v3.6
 
 First 2026 release - Happy New Year all! Thank you to all contributors. One big highlight is new metadata spec for plugins, this is the start of better discovery and documentation generation for third party facts and operations:
@@ -38,6 +74,7 @@ Docs/meta:
 - docs: fix URLs in API documentation (@kelno)
 - docs/connectors: document command wrapping and parameter filtering best practices (@elazar)
 - tests: freeze date for fact tests
+
 
 # v3.5.3
 
@@ -110,6 +147,7 @@ Internal/meta:
 
 - documentation link fix (@sengo4hd)
 
+
 # v3.4.1
 
 - fix config context when getting operation arguments
@@ -144,6 +182,7 @@ Operation/fact fixes:
 Internal/meta:
 
 - remove unnecessary setuptools runtime dependency (@karlicoss)
+
 
 # v3.3.1
 
@@ -204,6 +243,7 @@ Internal/meta:
 - ci: Github Actions support for python 3.12 (@wowi42)
 - ci: Prevent docs job from running on forks (@simonhammes)
 
+
 # v3.2
 
 Hello 2025! Here's pyinfra 3.2 - with another incredible round of contributions from the community, THANK YOU ALL. New stuff:
@@ -241,6 +281,7 @@ Docs/internal tweaks:
 - Require JSON tests to include all arguments
 - Remove unused `configparser` dependency (@bkmgit)
 - Many small documentation fixes/tweaks
+
 
 # v3.1.1
 
@@ -282,6 +323,7 @@ Docs/internal tweaks:
 - Default to local machine if `user_name` set in systecmt (@bauen1)
 - Improve efficiency of Docker operations (@apecnascimento)
 - Shallow copy `host.data` data to mutation
+
 
 # v3.0.2
 
