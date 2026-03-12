@@ -9,8 +9,6 @@ Outputs changelog entries grouped by category, with GitHub usernames for
 external contributors.
 """
 
-import json
-import re
 import subprocess
 import sys
 from collections import defaultdict
