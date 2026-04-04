@@ -12,6 +12,7 @@ import gevent
 from pyinfra import logger
 from pyinfra.api.output import echo, format_text
 from pyinfra.api import MaskString, QuoteString, StringCommand
+from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import memoize
 
 if TYPE_CHECKING:
@@ -24,7 +25,7 @@ SUDO_ASKPASS_ENV_VAR = "PYINFRA_SUDO_PASSWORD"
 SU_ASKPASS_ENV_VAR = "PYINFRA_SU_PASSWORD"
 
 
-SUDO_ASKPASS_COMMAND = r"""
+ASKPASS_COMMAND = r"""
 temp=$(mktemp "${{TMPDIR:={0}}}/pyinfra-sudo-askpass-XXXXXXXXXXXX")
 cat >"$temp"<<'__EOF__'
 #!/bin/sh
@@ -270,25 +271,29 @@ def extract_control_arguments(arguments: "ConnectorArguments") -> "ConnectorArgu
 
 
 def _ensure_sudo_askpass_set_for_host(host: "Host"):
-    if host.connector_data.get("sudo_askpass_path"):
-        return
-    _, output = host.run_shell_command(
-        SUDO_ASKPASS_COMMAND.format(host.get_temp_dir_config(), SUDO_ASKPASS_ENV_VAR)
-    )
-    host.connector_data["sudo_askpass_path"] = StringCommand(
-        QuoteString(output.stdout_lines[0])
-    ).get_raw_value()
+    return _ensure_askpass_set_for_host(host, "sudo_askpass_path", SUDO_ASKPASS_ENV_VAR)
 
 
 def _ensure_su_askpass_set_for_host(host: "Host"):
-    if host.connector_data.get("su_askpass_path"):
+    return _ensure_askpass_set_for_host(host, "su_askpass_path", SU_ASKPASS_ENV_VAR)
+
+
+def _ensure_askpass_set_for_host(host: "Host", key: str, env_var: str):
+    if host.connector_data.get(key):
         return
-    _, output = host.run_shell_command(
-        SUDO_ASKPASS_COMMAND.format(host.get_temp_dir_config(), SU_ASKPASS_ENV_VAR)
-    )
-    host.connector_data["su_askpass_path"] = StringCommand(
-        QuoteString(output.stdout_lines[0])
-    ).get_raw_value()
+    ok, output = host.run_shell_command(ASKPASS_COMMAND.format(host.get_temp_dir_config(), env_var))
+
+    if not ok:
+        raise PyinfraError("Failed to create sudo_askpass command: {0}".format(output.output))
+
+    if not output.stdout_lines:
+        raise PyinfraError(
+            "Failed to create sudo_askpass command: no output produced by command: {0}".format(
+                output.output,
+            )
+        )
+
+    host.connector_data[key] = StringCommand(QuoteString(output.stdout_lines[0])).get_raw_value()
 
 
 def make_unix_command_for_host(
