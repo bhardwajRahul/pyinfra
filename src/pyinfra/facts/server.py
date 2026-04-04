@@ -210,6 +210,15 @@ class MacosVersion(FactBase[str]):
         return "sw_vers -productVersion"
 
 
+class ProcessDict(TypedDict):
+    user: str
+    state: str
+    cpu_percent: float
+    mem_percent: float
+    command: str
+    args: str
+
+
 class MountsDict(TypedDict):
     device: str
     type: str
@@ -1045,3 +1054,104 @@ echo "no_reboot_required"
     @override
     def process(self, output) -> bool:
         return list(output)[0].strip() == "reboot_required"
+
+
+class Processes(FactBase["Dict[int, ProcessDict]"]):
+    """
+    Returns a dictionary of running processes keyed by PID.
+
+    .. code:: python
+
+        {
+            1: {
+                "user": "root",
+                "state": "Ss",
+                "cpu_percent": 0.0,
+                "mem_percent": 0.1,
+                "command": "init",
+                "args": "/sbin/init",
+            },
+        }
+    """
+
+    default = dict
+
+    @override
+    def command(self, pid: int | None = None) -> str:
+        self._kernel = host.get_fact(Kernel)
+        is_bsd = self._kernel.strip() in ("FreeBSD", "Darwin")
+
+        # BusyBox ps (Alpine) only supports limited columns.
+        # Detect by checking if busybox exists on the system.
+        if not is_bsd:
+            self._is_busybox = bool(host.get_fact(Which, "busybox"))
+        else:
+            self._is_busybox = False
+
+        if not self._is_busybox:
+            fields = "pid,user,stat,%cpu,%mem,comm,args"
+        else:
+            # BusyBox ps: only pid, user/uid, vsz, stat, args are reliable
+            fields = "pid,user,vsz,stat,args"
+
+        if pid is not None:
+            if self._is_busybox:
+                return f"LANG=C ps -o {fields} | awk 'NR==1 || $1=={pid}'"
+            return f"LANG=C ps -p {pid} -o {fields}"
+
+        if is_bsd:
+            return f"LANG=C ps -eo {fields}"
+        elif self._is_busybox:
+            return f"LANG=C ps -o {fields}"
+        else:
+            return f"LANG=C ps -eo {fields} --no-headers"
+
+    @override
+    def process(self, output: Iterable[str]) -> dict[int, ProcessDict]:
+        processes: dict[int, ProcessDict] = {}
+
+        for line in output:
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith("PID"):
+                continue
+
+            if not self._is_busybox:
+                parts = line.split(None, 6)
+                if len(parts) < 6:
+                    continue
+                try:
+                    pid = int(parts[0])
+                except ValueError:
+                    continue
+                args = parts[6] if len(parts) > 6 else parts[5]
+                processes[pid] = {
+                    "user": parts[1],
+                    "state": parts[2],
+                    "cpu_percent": float(parts[3]),
+                    "mem_percent": float(parts[4]),
+                    "command": parts[5],
+                    "args": args,
+                }
+            else:
+                # BusyBox format: pid, user, vsz, stat, args
+                parts = line.split(None, 4)
+                if len(parts) < 5:
+                    continue
+                try:
+                    pid = int(parts[0])
+                except ValueError:
+                    continue
+                args = parts[4]
+                command = args.split()[0].rsplit("/", 1)[-1] if args else ""
+                processes[pid] = {
+                    "user": parts[1],
+                    "state": parts[3],
+                    "cpu_percent": 0.0,
+                    "mem_percent": 0.0,
+                    "command": command,
+                    "args": args,
+                }
+
+        return processes
