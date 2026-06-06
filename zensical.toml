@@ -84,9 +84,6 @@ docs_version = "latest"
 primary_doc_version = "3.x"
 doc_versions = ["3.x", "2.x", "1.x", "0.x", "latest"]
 docs_language = "en"
-algolia_app_id = "XXGX6EX4KA"
-algolia_api_key = "25a25b5f5310f306641f9ce07dcb06eb"
-algolia_index_name = "pyinfra"
 plausible_domain = "docs.pyinfra.com"
 plausible_stats_domain = "stats.oxygem.com"
 

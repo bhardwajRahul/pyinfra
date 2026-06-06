@@ -23,32 +23,14 @@
     {% endif %}
 {% endblock %}
 
-{#
-    Algolia DocSearch. Credentials come from config.extra (see zensical.toml).
-#}
 {% block extrahead %}
     {{ super() }}
     <meta name="darkreader-lock">
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap">
-{% endblock %}
-
-{% block libs %}
-    {{ super() }}
-    <script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
-    <script>
-        docsearch({
-            appId: {{ config.extra.algolia_app_id | tojson }},
-            apiKey: {{ config.extra.algolia_api_key | tojson }},
-            indexName: {{ config.extra.algolia_index_name | tojson }},
-            container: "#docsearch",
-            debug: false,
-        });
-    </script>
+    {# JetBrains Mono self-hosted via pyinfra.com; @font-face lives in pyinfra.css #}
+    <link rel="preconnect" href="https://pyinfra.com" crossorigin>
+    <link rel="preload" crossorigin
+          href="https://pyinfra.com/static/fonts/jetbrains-mono-latin.woff2"
+          as="font" type="font/woff2">
 {% endblock %}
 
 {# Plausible analytics #}
