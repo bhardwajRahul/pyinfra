@@ -38,23 +38,23 @@ copy_docs() {
 # Build "next" docs
 if [ "${BRANCH_NAME}" = "${NEXT_BRANCH}" ]; then
     build_docs "next" "build/next"
-    copy_docs "build/next" "docs/public/en/next"
+    copy_docs "build/next" "docs-public/en/next"
 fi
 
 # Build "latest" docs
 if [ "${BRANCH_NAME}" = "${LATEST_BRANCH}" ]; then
     build_docs "latest" "build/latest"
-    copy_docs "build/latest" "docs/public/en/latest"
+    copy_docs "build/latest" "docs-public/en/latest"
 fi
 
 # Build versioned docs for a valid tag
 if [ -n "${TAG_NAME}" ] && [[ "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+([\.a-z0-9]+)?$ ]]; then
     build_docs "$BRANCH_NAME" "build/${BRANCH_NAME}"
-    copy_docs "build/${BRANCH_NAME}" "docs/public/en/${BRANCH_NAME}"
+    copy_docs "build/${BRANCH_NAME}" "docs-public/en/${BRANCH_NAME}"
 
     if [ "${BRANCH_NAME}" = "${LATEST_BRANCH}" ]; then
         echo "Generating /page redirects"
-        mkdir -p "docs/public/page/"
+        mkdir -p "docs-public/page/"
         DOCS_VERSION=$BRANCH_NAME uv run python scripts/generate_redirect_pages.py
     fi
 fi

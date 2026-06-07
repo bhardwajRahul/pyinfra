@@ -1,3 +1,7 @@
+# v3.9.2
+
+- Fix documentation recursive copy mess
+
 # v3.9.1
 
 - Fix documentation redirect pages generation
