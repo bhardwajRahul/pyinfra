@@ -54,6 +54,7 @@ if [ -n "${TAG_NAME}" ] && [[ "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+([\.a-z0-9]+)?$ ]];
 
     if [ "${BRANCH_NAME}" = "${LATEST_BRANCH}" ]; then
         echo "Generating /page redirects"
+        mkdir -p "docs/public/page/"
         DOCS_VERSION=$BRANCH_NAME uv run python scripts/generate_redirect_pages.py
     fi
 fi

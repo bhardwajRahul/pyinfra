@@ -1,3 +1,7 @@
+# v3.9.1
+
+- Fix documentation redirect pages generation
+
 # v3.9.0
 
 Another big release with a lot of fixes and improvements across the board - thank you to all contributors! This release also comes alongside completely refreshed documentation site, with a huge number of UX and copy improvements and a shiny new marketing site.
