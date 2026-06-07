@@ -80,6 +80,7 @@ dev = [
     # dev-only lint extras
     "typos>=1.36.2",
     "freezegun>=1.5.5",
+    "requests>=2.34.2",
 ]
 
 [project.scripts]
