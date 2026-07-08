@@ -24,6 +24,14 @@ ISO_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 # Usernames used in shell tilde expansion (``~user``) cannot be quoted without
 # disabling the expansion, so the value must be a plain, shell-safe word.
 _SAFE_USERNAME_RE = re.compile(r"^[a-zA-Z0-9._][a-zA-Z0-9._-]*$")
+_OPENBSD_MOUNT_V_RE = re.compile(
+    r"""
+        (\S+) (?:\ \(.*\))?\  # the (diskname.label) part isn't always there, hence optional group
+        on\ (/.*)\            # *, not +, since root path "/" will be mounted
+        type\ (\w+)\          # types from /sbin/mount_*
+        \((.+)\)              # flags are in this group""",
+    flags=re.VERBOSE,
+)
 
 
 def _check_tilde_username(user: str) -> None:
@@ -282,10 +290,12 @@ class Mounts(FactBase[dict[str, MountsDict]]):
 
     @override
     def command(self) -> str:
-        self._kernel = host.get_fact(Kernel)
+        self._kernel = host.get_fact(Kernel).strip()
 
-        if self._kernel.strip() == "FreeBSD":
+        if self._kernel == "FreeBSD":
             return "mount -p --libxo json"
+        if self._kernel == "OpenBSD":
+            return "mount -v"
         else:
             return "cat /proc/self/mountinfo"
 
@@ -315,6 +325,18 @@ class Mounts(FactBase[dict[str, MountsDict]]):
                 options = [option.strip() for option in entry["opts"].split(",")]
 
                 devices[path] = {"device": device, "type": type_, "options": options}
+
+            return devices
+
+        if self._kernel == "OpenBSD":
+            for line in output:
+                if m := _OPENBSD_MOUNT_V_RE.fullmatch(line):
+                    path = m[2]
+                    device = m[1]
+                    type_ = m[3]
+                    options = [opt.strip(" ") for opt in m[4].split(",") if "ctime=" not in opt]
+
+                    devices[path] = {"device": device, "type": type_, "options": options}
 
             return devices
 
