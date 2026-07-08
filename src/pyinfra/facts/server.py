@@ -915,6 +915,11 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
     Fedora & Gentoo currently. Also contains any key/value items located in
     release files.
 
+    ``major`` and ``minor`` resolved from the most precise source available, when
+    ``/etc/os-release`` exposes only major version (e.g. CentOS 8's ``VERSION_ID="8"``),
+    ``major.minor`` is read from distro-specific release file (e.g. ``/etc/centos-release``)
+    instead. ``minor`` is ``None`` when no source provides it (e.g. CentOS Stream).
+
     .. code:: python
 
         {
@@ -1000,11 +1005,15 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
             # TODO: fix this!
             release_meta.pop("RELEASE_CODENAME", None)
 
+            # try_int returns its input on failure, so a missing version part comes back as ""
+            major = try_int(parsed.major_version(best=True))
+            minor = try_int(parsed.minor_version(best=True))
+
             release_info.update(
                 {
                     "name": self.name_to_pretty_name.get(parsed.id(), parsed.name()),
-                    "major": try_int(parsed.major_version()) or None,
-                    "minor": try_int(parsed.minor_version()) or None,
+                    "major": major if isinstance(major, int) else None,
+                    "minor": minor if isinstance(minor, int) else None,
                     "release_meta": release_meta,
                 },
             )
