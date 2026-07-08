@@ -1,6 +1,6 @@
 from getpass import getpass
 from os import path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from paramiko import (
     ECDSAKey,
@@ -17,6 +17,42 @@ from pyinfra.api.exceptions import ConnectError, PyinfraError
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
     from pyinfra.api.state import State
+
+
+def _patch_paramiko_sk_key_support() -> None:
+    """
+    Work around paramiko/paramiko#2462 so an ED25519-SK (FIDO2/YubiKey) key in
+    the SSH agent does not break every connection.
+
+    On paramiko 3.2+, such an ``AgentKey`` has no ``inner_key``, so accessing
+    ``key.public_blob`` raises ``AttributeError`` rather than returning ``None``.
+    ``AuthHandler._get_key_type_and_bits`` does ``if key.public_blob:`` and blows
+    up with that uncaught ``AttributeError`` before any other agent key can be
+    tried, surfacing in pyinfra as an internal greenlet failure (issue #1242).
+
+    Mirrors upstream paramiko PR #2475 by treating a missing ``public_blob`` as
+    absent. The patch is idempotent (marks its replacement so a second call is a
+    no-op) and is installed whenever Paramiko exposes the expected private helper.
+    The replacement matches the upstream behavior for both affected and fixed
+    versions, so there is no fragile version probe.
+    """
+    from paramiko.auth_handler import AuthHandler
+
+    current_method = getattr(AuthHandler, "_get_key_type_and_bits", None)
+    if current_method is None:
+        return
+
+    if getattr(current_method, "_pyinfra_sk_patch", False):
+        return
+
+    def get_key_type_and_bits(self: Any, key: Any) -> tuple[str, Any]:
+        public_blob = getattr(key, "public_blob", None)
+        if public_blob:
+            return public_blob.key_type, public_blob.key_blob
+        return key.get_name(), key
+
+    setattr(get_key_type_and_bits, "_pyinfra_sk_patch", True)
+    setattr(AuthHandler, "_get_key_type_and_bits", get_key_type_and_bits)
 
 
 def raise_connect_error(host: "Host", message, data):
