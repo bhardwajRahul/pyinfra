@@ -61,7 +61,7 @@ test = [
     "types-paramiko>=2.7,<4",
     "types-python-dateutil>2,<3",
     "types-PyYAML>6,<7",
-    "ruff>=0.13.1",
+    "ruff==0.14.0",
     "pyinfra-testing>=0.2.1",
 ]
 
